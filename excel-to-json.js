@@ -14,7 +14,6 @@ workbook.SheetNames.forEach(sheetName => {
   const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
   catalog[sheetName] = rows.map(row => ({
     category: row['Category'] || sheetName,
-    binCode: row['Bin Code'] || '',
     description: row['Description'] || '',
     packaging: row['Packaging Details'] || row['Packaging'] || '',
     quantity: 0,

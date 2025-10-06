@@ -1,1 +1,2 @@
-# customer-order-app
+# shoplist-app
+creating shop list 

@@ -87,7 +87,7 @@ const SummaryPage: React.FC = () => {
   }, [items]);
 
   const handleDownload = () => {
-    setDownloadError(null);
+      setDownloadError(null);
     if (!customer.email || customer.email.trim() === '') {
       setDownloadError('Please enter your email before downloading the Excel sheet.');
       return;
@@ -96,6 +96,7 @@ const SummaryPage: React.FC = () => {
       setDownloadError('Order summary is empty. Please add at least one product before downloading.');
       return;
     }
+
     downloadOrderXlsx(items, localItems, customer, customer.orderNumber);
     reset();
   };
@@ -152,25 +153,42 @@ const SummaryPage: React.FC = () => {
               onChange={handleSummaryEdit}
               onDelete={(id) => setLocalItems(prev => prev.filter(item => item.id !== id))}
             />
-            <div className="flex flex-col items-end mt-8 gap-4">
-              {downloadError && (
-                <div className="text-red-600 text-sm mb-2" style={{ alignSelf: 'flex-end' }}>{downloadError}</div>
+<div className="">
+   {downloadError && (
+                <div
+  className="text-red-600 text-sm mb-2"
+  style={{
+    alignSelf: 'flex-end',
+    color: 'red',
+    fontWeight: 700,
+    padding: '2%',
+    marginTop: '1%',
+    border: '1px solid #ccc',
+    textAlign: 'center',
+  }}
+>
+  {downloadError}
+</div>
               )}
-              <div className="flex gap-4">
-                <button
-                  className="bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow hover:bg-blue-800 transition"
-                  style={{ minWidth: 150, cursor: 'pointer', backgroundColor: '#1d4ed8', color: '#fff', opacity: 1 }}
-                  onClick={handleDownload}
-                  type="button"
-                  tabIndex={0}
-                  aria-disabled={false}
-                >
-                  Download Excel
-                </button>
-                <button className="bg-green-700 text-white px-8 py-3 rounded-lg font-semibold shadow hover:bg-green-800 transition" type="button" onClick={handleSubmitOrder}>
-                  Submit Order
-                </button>
-              </div>
+</div>
+
+            <div className="flex justify-end mt-8 gap-4">
+
+             
+
+              <button
+                className="bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow hover:bg-blue-800 transition"
+                style={{ padding:'1%' , minWidth: 150, cursor: 'pointer', backgroundColor: '#1d4ed8', color: '#fff', opacity: 1 }}
+                onClick={handleDownload}
+                type="button"
+                tabIndex={0}
+                aria-disabled={false}
+              >
+                Submit Order
+              </button>
+              {/* <button className="bg-green-700 text-white px-8 py-3 rounded-lg font-semibold shadow hover:bg-green-800 transition" type="button" onClick={handleSubmitOrder}>
+                Submit Order
+              </button> */}
             </div>
           </div>
         </main>

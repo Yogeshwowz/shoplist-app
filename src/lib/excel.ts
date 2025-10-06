@@ -5,12 +5,17 @@ import { OrderItem } from '../hooks/useOrderStore';
 import { CustomerDetails } from '../components/CustomerDetailsForm';
 import * as XLSX from 'xlsx';
 
-export function downloadOrderXlsx(
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
+
+ 
+export async  function downloadOrderXlsx (
   allTabsData: Record<string, OrderItem[]>,
   orderSummary: OrderItem[],
   customer: CustomerDetails,
   orderNumber: string
 ) {
+  let sendemail: string
   // Prepare customer details as a 2D array (table) matching the web structure
   const customerRows = [
     ['Name', 'Phone', 'Order Date *'],
@@ -20,8 +25,19 @@ export function downloadOrderXlsx(
     ['Order Number', customer.orderNumber, ''],
   ];
 
+
+
+const s3 = new S3Client({
+  region: import.meta.env.VITE_AWS_REGION,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+
   // Prepare order summary header and rows
-  const summaryHeader = [
+const summaryHeader = [
     'Category',
     'Bin Code',
     'Description',
@@ -48,10 +64,56 @@ export function downloadOrderXlsx(
     ...summaryRows,
   ];
 
+   const fileName = "Order_12345.xlsx";
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Order');
 
   // Download the file
-  XLSX.writeFile(wb, `Order_${customer.orderNumber || orderNumber}.xlsx`);
+  const buffer = XLSX.writeFile(wb, `Order_${customer.orderNumber || orderNumber}.xlsx`);
+
+   const command = new PutObjectCommand({
+    Bucket: "customershoplist",
+    Key: `orders/${fileName}`,
+    //Key: `${fileName}`,
+    Body: buffer,
+    ContentType:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    // ACL: "public-read", 
+  });
+
+  await s3.send(command);
+    const fileUrl = `${import.meta.env.VITE_AWS_BUCKET_NAME}${fileName}`;
+
+  console.log(fileUrl);
+  console.log("Uploaded directly to S3!");
+  sendemail = customer?.email;
+// alert('aaaaaaaaaaa=>' + customer.email);
+// console.log('customer object:', customer);
+// alert('customer email: ' + customer?.email);
+
+  try {
+  const response = await fetch("/api/save-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderNumber, fileUrl, sendemail }),
+  });
+
+  if (!response.ok) {
+    // If server returned an error
+    const errorText = await response.text();
+    alert(`Failed to save order: ${errorText}`);
+    return;
+  }
+
+  alert("✅ Order saved successfully!");
+} catch (err) {
+  alert("✅ error successfully!");
+  console.error(err);
+  alert("❌ Network or server error while saving order.");
+}
+
+
+
+
 }
