@@ -8,6 +8,7 @@ export interface OrderItem {
   quantity: number;
   chefComment?: string;
   shopperComment?: string;
+  binCode?: string;
 }
 
 export interface CustomerDetails {
