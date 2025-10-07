@@ -15,7 +15,7 @@ export async  function downloadOrderXlsx (
   customer: CustomerDetails,
   orderNumber: string
 ) {
-  let sendemail: string
+  let email: string
   // Prepare customer details as a 2D array (table) matching the web structure
   const customerRows = [
     ['Name', 'Phone', 'Order Date *'],
@@ -64,7 +64,7 @@ const summaryHeader = [
     ...summaryRows,
   ];
 
-   const fileName = "Order_12345.xlsx";
+   const fileName = `${customer.orderNumber || orderNumber}Order_.xlsx`;
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Order');
@@ -73,30 +73,31 @@ const summaryHeader = [
   const buffer = XLSX.writeFile(wb, `Order_${customer.orderNumber || orderNumber}.xlsx`);
 
    const command = new PutObjectCommand({
-    Bucket: "customershoplist",
-    Key: `orders/${fileName}`,
+    Bucket: "excelfile-shoresupport",
+    Key: `${fileName}`,
     //Key: `${fileName}`,
     Body: buffer,
     ContentType:
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    // ACL: "public-read", 
+     //ACL: "public-read", 
   });
 
   await s3.send(command);
-    const fileUrl = `${import.meta.env.VITE_AWS_BUCKET_NAME}${fileName}`;
+    const url = `${import.meta.env.VITE_AWS_BUCKET_NAME}${fileName}`;
 
-  console.log(fileUrl);
+  console.log(url);
   console.log("Uploaded directly to S3!");
-  sendemail = customer?.email;
+  email = customer?.email;
 // alert('aaaaaaaaaaa=>' + customer.email);
 // console.log('customer object:', customer);
 // alert('customer email: ' + customer?.email);
 
   try {
-  const response = await fetch("/api/save-order", {
+  const VITE_NODE_API_URL = import.meta.env.VITE_NODE_API_URL;
+  const response = await fetch(VITE_NODE_API_URL+"/api/user/sendMailAttachment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderNumber, fileUrl, sendemail }),
+    body: JSON.stringify({ orderNumber, url, email }),
   });
 
   if (!response.ok) {
